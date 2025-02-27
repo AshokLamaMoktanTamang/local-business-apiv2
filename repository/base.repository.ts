@@ -64,4 +64,12 @@ export class BaseRepository<T> {
   ) {
     return this.update({ _id: id }, update, options);
   }
+
+  find(
+    filter: RootFilterQuery<T>,
+    projection?: ProjectionType<T>,
+    options?: QueryOptions<T> & { lean: true; }
+  ) {
+    return this.model.find(filter, projection, options);
+  }
 }

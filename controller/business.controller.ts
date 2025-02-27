@@ -10,6 +10,7 @@ export class BusinessController {
   constructor() {
     this.businessService = new BusinessService();
     this.registerBusiness = this.registerBusiness.bind(this);
+    this.listBusinesses = this.listBusinesses.bind(this);
   }
 
   async registerBusiness(req: AuthRequest, res: Response) {
@@ -30,6 +31,24 @@ export class BusinessController {
       } as any);
 
       return ResponseHelper.json({ res, data: business });
+    } catch (error) {}
+    return ResponseHelper.json({
+      res,
+      statusCode: STATUS_CODE.SERVER_ERROR,
+    });
+  }
+
+  async listBusinesses(req: AuthRequest, res: Response) {
+    try {
+      const { query, userId } = req;
+      const { owner } = query;
+
+      const businesses = await this.businessService.find({
+        owner,
+        ...(owner === userId.toString() ? {} : { isVerified: true }),
+      });
+
+      return ResponseHelper.json({ res, data: businesses });
     } catch (error) {}
     return ResponseHelper.json({
       res,

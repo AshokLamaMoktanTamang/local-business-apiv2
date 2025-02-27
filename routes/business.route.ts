@@ -14,6 +14,6 @@ businessRouter.post(
   authMiddleware,
   upload.single("image"),
   validateSchema(registerBusinessSchema),
-
   businessController.registerBusiness
 );
+businessRouter.get("/", authMiddleware, businessController.listBusinesses);
