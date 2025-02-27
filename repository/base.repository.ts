@@ -3,13 +3,14 @@ import {
   CreateOptions,
   Model,
   MongooseBaseQueryOptionKeys,
+  MongooseBaseQueryOptions,
   ProjectionType,
   QueryOptions,
   RootFilterQuery,
   UpdateQuery,
   UpdateWithAggregationPipeline,
 } from "mongoose";
-import { UpdateOptions } from "mongodb";
+import { DeleteOptions, UpdateOptions } from "mongodb";
 
 export class BaseRepository<T> {
   constructor(private readonly model: Model<T>) {}
@@ -68,8 +69,15 @@ export class BaseRepository<T> {
   find(
     filter: RootFilterQuery<T>,
     projection?: ProjectionType<T>,
-    options?: QueryOptions<T> & { lean: true; }
+    options?: QueryOptions<T> & { lean: true }
   ) {
     return this.model.find(filter, projection, options);
+  }
+
+  delete(
+    filter: RootFilterQuery<T>,
+    options?: (DeleteOptions & MongooseBaseQueryOptions<T>) | null
+  ) {
+    return this.model.deleteOne(filter, options);
   }
 }

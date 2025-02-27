@@ -11,6 +11,9 @@ export class BusinessController {
     this.businessService = new BusinessService();
     this.registerBusiness = this.registerBusiness.bind(this);
     this.listBusinesses = this.listBusinesses.bind(this);
+    this.deleteBusiness = this.deleteBusiness.bind(this);
+    this.editBusiness = this.editBusiness.bind(this);
+    this.getbusinessById = this.getbusinessById.bind(this);
   }
 
   async registerBusiness(req: AuthRequest, res: Response) {
@@ -31,11 +34,13 @@ export class BusinessController {
       } as any);
 
       return ResponseHelper.json({ res, data: business });
-    } catch (error) {}
-    return ResponseHelper.json({
-      res,
-      statusCode: STATUS_CODE.SERVER_ERROR,
-    });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
   }
 
   async listBusinesses(req: AuthRequest, res: Response) {
@@ -49,10 +54,123 @@ export class BusinessController {
       });
 
       return ResponseHelper.json({ res, data: businesses });
-    } catch (error) {}
-    return ResponseHelper.json({
-      res,
-      statusCode: STATUS_CODE.SERVER_ERROR,
-    });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async deleteBusiness(req: AuthRequest, res: Response) {
+    try {
+      const { userId, params } = req;
+      const { businessId } = params;
+
+      const business = await this.businessService.findById(businessId);
+
+      if (!business)
+        return ResponseHelper.json({
+          res,
+          message: "Business not found",
+          statusCode: STATUS_CODE.NOT_FOUND,
+        });
+
+      if (business.owner.toString() !== userId)
+        return ResponseHelper.json({
+          res,
+          message: "User not allowed to delete this business",
+          statusCode: STATUS_CODE.FORBIDDEN,
+        });
+
+      await this.businessService.delete({ _id: businessId });
+
+      return ResponseHelper.json({
+        res,
+        message: "Business Deleted sucessfully!",
+      });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async editBusiness(req: AuthRequest, res: Response) {
+    try {
+      const { userId, params, body } = req;
+      const { businessId } = params;
+
+      const business = await this.businessService.findById(businessId);
+
+      if (!business)
+        return ResponseHelper.json({
+          res,
+          message: "Business not found",
+          statusCode: STATUS_CODE.NOT_FOUND,
+        });
+
+      if (business.owner.toString() !== userId)
+        return ResponseHelper.json({
+          res,
+          message: "User not allowed to edit this business",
+          statusCode: STATUS_CODE.FORBIDDEN,
+        });
+
+      const { name, description, phone, email, latitude, longitude, address } =
+        body;
+
+      const updatedBusiness = await this.businessService.updateById(
+        businessId,
+        {
+          name,
+          description,
+          phone,
+          email,
+          owner: userId,
+          location: { latitude, longitude },
+          address,
+          image: (req as any).file ? (req as any).file.path : business.image,
+        } as any
+      );
+
+      return ResponseHelper.json({ res, data: updatedBusiness });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async getbusinessById(req: AuthRequest, res: Response) {
+    try {
+      const { userId, params } = req;
+      const { businessId } = params;
+
+      const business = await this.businessService.findById(businessId);
+
+      if (
+        !business ||
+        (!business.isVerified && business.owner.toString() !== userId)
+      )
+        return ResponseHelper.json({
+          res,
+          message: "Business not found",
+          statusCode: STATUS_CODE.NOT_FOUND,
+        });
+
+      return ResponseHelper.json({ res, data: business });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
   }
 }

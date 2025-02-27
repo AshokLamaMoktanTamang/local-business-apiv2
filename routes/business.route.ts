@@ -17,3 +17,19 @@ businessRouter.post(
   businessController.registerBusiness
 );
 businessRouter.get("/", authMiddleware, businessController.listBusinesses);
+businessRouter.delete(
+  "/:businessId",
+  authMiddleware,
+  businessController.deleteBusiness
+);
+businessRouter.patch(
+  "/:businessId",
+  authMiddleware,
+  upload.single("image"),
+  businessController.editBusiness
+);
+businessRouter.get(
+  "/:businessId",
+  authMiddleware,
+  businessController.getbusinessById
+);
