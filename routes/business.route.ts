@@ -33,3 +33,8 @@ businessRouter.get(
   authMiddleware,
   businessController.getbusinessById
 );
+businessRouter.get(
+  "/list/unverified",
+  authMiddleware,
+  businessController.listUnverifiedBusinesses
+);

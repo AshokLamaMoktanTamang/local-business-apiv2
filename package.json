@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "dev": "nodemon -r tsconfig-paths/register ./index.ts"
+    "dev": "nodemon -r tsconfig-paths/register ./index.ts",
+    "seed:admin": "nodemon -r tsconfig-paths/register ./scripts/seedAdmin.ts"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

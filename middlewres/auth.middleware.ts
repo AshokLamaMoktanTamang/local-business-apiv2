@@ -1,11 +1,12 @@
 import { env } from "@/config";
-import { STATUS_CODE } from "@/constants";
+import { STATUS_CODE, USER_ROLE } from "@/constants";
 import { ResponseHelper } from "@/helper/response.helper";
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
   userId?: string;
+  userRole?: USER_ROLE;
 }
 
 const authMiddleware = (
@@ -26,6 +27,7 @@ const authMiddleware = (
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET);
     req.userId = (decoded as JwtPayload)?.id;
+    req.userRole = (decoded as JwtPayload)?.role;
     next();
   } catch (error) {
     return ResponseHelper.json({

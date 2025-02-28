@@ -1,4 +1,4 @@
-import { STATUS_CODE } from "@/constants";
+import { STATUS_CODE, USER_ROLE } from "@/constants";
 import { ResponseHelper } from "@/helper/response.helper";
 import { AuthRequest } from "@/middlewres/auth.middleware";
 import { BusinessService } from "@/services/business.service";
@@ -14,6 +14,7 @@ export class BusinessController {
     this.deleteBusiness = this.deleteBusiness.bind(this);
     this.editBusiness = this.editBusiness.bind(this);
     this.getbusinessById = this.getbusinessById.bind(this);
+    this.listUnverifiedBusinesses = this.listUnverifiedBusinesses.bind(this);
   }
 
   async registerBusiness(req: AuthRequest, res: Response) {
@@ -165,6 +166,29 @@ export class BusinessController {
         });
 
       return ResponseHelper.json({ res, data: business });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async listUnverifiedBusinesses(req: AuthRequest, res: Response) {
+    try {
+      const { userRole } = req;
+
+      if (userRole !== USER_ROLE.ADMIN)
+        return ResponseHelper.json({
+          res,
+          message: "User not allowed to list the businesses",
+          statusCode: STATUS_CODE.FORBIDDEN,
+        });
+
+      const businesss = await this.businessService.find({ isVerified: false });
+
+      return ResponseHelper.json({ res, data: businesss });
     } catch (error) {
       return ResponseHelper.json({
         res,

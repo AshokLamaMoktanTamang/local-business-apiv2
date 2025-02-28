@@ -88,6 +88,7 @@ export class AuthController {
 
       const token = await this.userService.generateAccessToken({
         id: existingUser?.toJSON()?.id,
+        role: existingUser?.toJSON()?.role,
       });
 
       return ResponseHelper.json({
