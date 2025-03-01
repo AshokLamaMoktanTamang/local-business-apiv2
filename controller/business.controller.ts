@@ -16,6 +16,7 @@ export class BusinessController {
     this.getbusinessById = this.getbusinessById.bind(this);
     this.listUnverifiedBusinesses = this.listUnverifiedBusinesses.bind(this);
     this.verifyBusiness = this.verifyBusiness.bind(this);
+    this.listAllverifiedBusiness = this.listAllverifiedBusiness.bind(this);
   }
 
   async registerBusiness(req: AuthRequest, res: Response) {
@@ -218,12 +219,31 @@ export class BusinessController {
         await this.businessService.delete({ _id: businessId });
         return ResponseHelper.json({ res, data: existingBusiness });
       }
-      
+
       const businesss = await this.businessService.updateById(businessId, {
         isVerified: verify,
       });
 
       return ResponseHelper.json({ res, data: businesss });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async listAllverifiedBusiness(req: AuthRequest, res: Response) {
+    try {
+      const businesses = await this.businessService
+        .find({ isVerified: true }, undefined, {
+          lean: true,
+          sort: { createdAt: -1 },
+        })
+        .populate({ path: "owner", select: "username email" });
+
+      return ResponseHelper.json({ res, data: businesses });
     } catch (error) {
       return ResponseHelper.json({
         res,

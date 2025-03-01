@@ -43,3 +43,7 @@ businessRouter.post(
   authMiddleware,
   businessController.verifyBusiness
 );
+businessRouter.get(
+  "/list/verified",
+  businessController.listAllverifiedBusiness
+);
