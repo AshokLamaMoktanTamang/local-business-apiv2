@@ -38,3 +38,8 @@ businessRouter.get(
   authMiddleware,
   businessController.listUnverifiedBusinesses
 );
+businessRouter.post(
+  "/:businessId/verify",
+  authMiddleware,
+  businessController.verifyBusiness
+);

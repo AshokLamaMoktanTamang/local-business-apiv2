@@ -15,6 +15,7 @@ export class BusinessController {
     this.editBusiness = this.editBusiness.bind(this);
     this.getbusinessById = this.getbusinessById.bind(this);
     this.listUnverifiedBusinesses = this.listUnverifiedBusinesses.bind(this);
+    this.verifyBusiness = this.verifyBusiness.bind(this);
   }
 
   async registerBusiness(req: AuthRequest, res: Response) {
@@ -187,6 +188,40 @@ export class BusinessController {
         });
 
       const businesss = await this.businessService.find({ isVerified: false });
+
+      return ResponseHelper.json({ res, data: businesss });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async verifyBusiness(req: AuthRequest, res: Response) {
+    try {
+      const { userRole, params, body } = req;
+      const { businessId } = params;
+      const { verify } = body;
+
+      if (userRole !== USER_ROLE.ADMIN)
+        return ResponseHelper.json({
+          res,
+          message: "User not allowed to verify the businesses",
+          statusCode: STATUS_CODE.FORBIDDEN,
+        });
+
+      const existingBusiness = await this.businessService.findById(businessId);
+
+      if (!existingBusiness.isVerified && !verify) {
+        await this.businessService.delete({ _id: businessId });
+        return ResponseHelper.json({ res, data: existingBusiness });
+      }
+      
+      const businesss = await this.businessService.updateById(businessId, {
+        isVerified: verify,
+      });
 
       return ResponseHelper.json({ res, data: businesss });
     } catch (error) {
