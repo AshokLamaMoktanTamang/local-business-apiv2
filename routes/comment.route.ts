@@ -11,3 +11,7 @@ commentRouter.post(
   authMiddleware,
   commentController.addComment
 );
+commentRouter.get(
+  "/business/:businessId",
+  commentController.listBusinessComent
+);
