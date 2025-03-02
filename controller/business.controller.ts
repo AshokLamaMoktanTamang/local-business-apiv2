@@ -14,6 +14,7 @@ export class BusinessController {
   constructor() {
     this.businessService = new BusinessService();
     this.interactionService = new InteractionService();
+
     this.registerBusiness = this.registerBusiness.bind(this);
     this.listBusinesses = this.listBusinesses.bind(this);
     this.deleteBusiness = this.deleteBusiness.bind(this);
@@ -23,6 +24,7 @@ export class BusinessController {
     this.verifyBusiness = this.verifyBusiness.bind(this);
     this.listAllverifiedBusiness = this.listAllverifiedBusiness.bind(this);
     this.getBusinessDetail = this.getBusinessDetail.bind(this);
+    this.getBusinessAnalytics = this.getBusinessAnalytics.bind(this);
   }
 
   async registerBusiness(req: AuthRequest, res: Response) {
@@ -277,7 +279,7 @@ export class BusinessController {
         try {
           const decoded = jwt.verify(token, env.JWT_SECRET);
           const userId = (decoded as JwtPayload)?.id;
-          
+
           await this.interactionService.create([
             {
               businessId,
@@ -292,6 +294,98 @@ export class BusinessController {
       }
 
       return ResponseHelper.json({ res, data: business });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async getBusinessAnalytics(req: AuthRequest, res: Response) {
+    try {
+      const { userId } = req;
+
+      // Find businesses owned by the user
+      const businesses = await this.businessService
+        .find({ owner: userId, isVerified: true }, "_id name")
+        .lean();
+
+      if (!businesses.length) {
+        return ResponseHelper.json({
+          res,
+          data: [],
+        });
+      }
+
+      const businessIds = businesses.map((b) => b._id);
+
+      // Aggregate interactions for those businesses
+      const analytics = await this.interactionService.aggregate([
+        { $match: { businessId: { $in: businessIds } } },
+        {
+          $group: {
+            _id: "$businessId",
+            interactions: {
+              $push: {
+                type: "$type",
+                count: { $sum: 1 },
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "businesses",
+            localField: "_id",
+            foreignField: "_id",
+            as: "businessDetails",
+          },
+        },
+        { $unwind: "$businessDetails" },
+        {
+          $project: {
+            businessId: "$_id",
+            businessName: "$businessDetails.name",
+            interactions: 1,
+            _id: 0,
+          },
+        },
+      ]);
+
+      const chartData = businesses.map((business) => {
+        const businessAnalytics = analytics.find(
+          (a) => a.businessId.toString() === business._id.toString()
+        );
+        const interactionCounts = {};
+
+        if (businessAnalytics) {
+          businessAnalytics.interactions.forEach((interaction) => {
+            interactionCounts[interaction.type] =
+              (interactionCounts[interaction.type] || 0) + interaction.count;
+          });
+        }
+
+        return {
+          businessName: business.name,
+          data: [
+            {
+              type: INTERACTION_TYPE.COMMENT,
+              count: interactionCounts[INTERACTION_TYPE.COMMENT] || 0,
+            },
+            {
+              type: INTERACTION_TYPE.VISIT,
+              count: interactionCounts[INTERACTION_TYPE.VISIT] || 0,
+            },
+          ],
+        };
+      });
+
+      return ResponseHelper.json({
+        res,
+        data: chartData,
+      });
     } catch (error) {
       return ResponseHelper.json({
         res,

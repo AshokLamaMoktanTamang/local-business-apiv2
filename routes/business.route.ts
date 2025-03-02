@@ -48,3 +48,8 @@ businessRouter.get(
   businessController.listAllverifiedBusiness
 );
 businessRouter.get("/detail/:businessId", businessController.getBusinessDetail);
+businessRouter.get(
+  "/v1/detail/analytics",
+  authMiddleware,
+  businessController.getBusinessAnalytics
+);
