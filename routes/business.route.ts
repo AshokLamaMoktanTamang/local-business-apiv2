@@ -47,3 +47,4 @@ businessRouter.get(
   "/list/verified",
   businessController.listAllverifiedBusiness
 );
+businessRouter.get("/detail/:businessId", businessController.getBusinessDetail);

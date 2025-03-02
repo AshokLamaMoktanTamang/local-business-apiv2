@@ -17,6 +17,7 @@ export class BusinessController {
     this.listUnverifiedBusinesses = this.listUnverifiedBusinesses.bind(this);
     this.verifyBusiness = this.verifyBusiness.bind(this);
     this.listAllverifiedBusiness = this.listAllverifiedBusiness.bind(this);
+    this.getBusinessDetail = this.getBusinessDetail.bind(this);
   }
 
   async registerBusiness(req: AuthRequest, res: Response) {
@@ -244,6 +245,28 @@ export class BusinessController {
         .populate({ path: "owner", select: "username email" });
 
       return ResponseHelper.json({ res, data: businesses });
+    } catch (error) {
+      return ResponseHelper.json({
+        res,
+        errors: error,
+        statusCode: STATUS_CODE.SERVER_ERROR,
+      });
+    }
+  }
+
+  async getBusinessDetail(req: AuthRequest, res: Response) {
+    try {
+      const { params } = req;
+      const { businessId } = params;
+
+      const business = await this.businessService
+        .findOne({ isVerified: true, _id: businessId }, undefined, {
+          lean: true,
+          sort: { createdAt: -1 },
+        })
+        .populate({ path: "owner", select: "username email" });
+
+      return ResponseHelper.json({ res, data: business });
     } catch (error) {
       return ResponseHelper.json({
         res,
