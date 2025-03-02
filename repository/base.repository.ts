@@ -1,9 +1,11 @@
 import {
+  AggregateOptions,
   AnyKeys,
   CreateOptions,
   Model,
   MongooseBaseQueryOptionKeys,
   MongooseBaseQueryOptions,
+  PipelineStage,
   ProjectionType,
   QueryOptions,
   RootFilterQuery,
@@ -79,5 +81,9 @@ export class BaseRepository<T> {
     options?: (DeleteOptions & MongooseBaseQueryOptions<T>) | null
   ) {
     return this.model.deleteOne(filter, options);
+  }
+
+  aggregate(pipeline?: PipelineStage[], options?: AggregateOptions) {
+    return this.model.aggregate(pipeline, options);
   }
 }
