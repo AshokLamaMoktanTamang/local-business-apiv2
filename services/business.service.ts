@@ -5,8 +5,4 @@ export class BusinessService extends BaseRepository<IBusiness> {
   constructor() {
     super(Business);
   }
-
-  registerBusiness() {
-    
-  }
 }

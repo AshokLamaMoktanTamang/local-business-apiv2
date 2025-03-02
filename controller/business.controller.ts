@@ -1,14 +1,19 @@
-import { STATUS_CODE, USER_ROLE } from "@/constants";
+import { env } from "@/config";
+import { INTERACTION_TYPE, STATUS_CODE, USER_ROLE } from "@/constants";
 import { ResponseHelper } from "@/helper/response.helper";
 import { AuthRequest } from "@/middlewres/auth.middleware";
 import { BusinessService } from "@/services/business.service";
+import { InteractionService } from "@/services/interaction.service";
 import { Response } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 export class BusinessController {
   private readonly businessService: BusinessService;
+  private readonly interactionService: InteractionService;
 
   constructor() {
     this.businessService = new BusinessService();
+    this.interactionService = new InteractionService();
     this.registerBusiness = this.registerBusiness.bind(this);
     this.listBusinesses = this.listBusinesses.bind(this);
     this.deleteBusiness = this.deleteBusiness.bind(this);
@@ -265,6 +270,26 @@ export class BusinessController {
           sort: { createdAt: -1 },
         })
         .populate({ path: "owner", select: "username email" });
+
+      const token = req.header("Authorization")?.split(" ")[1];
+
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, env.JWT_SECRET);
+          const userId = (decoded as JwtPayload)?.id;
+          
+          await this.interactionService.create([
+            {
+              businessId,
+              businessOwner: business.owner,
+              userId,
+              type: INTERACTION_TYPE.VISIT,
+            },
+          ]);
+        } catch (error) {
+          console.error(error, "failed to save interaction");
+        }
+      }
 
       return ResponseHelper.json({ res, data: business });
     } catch (error) {

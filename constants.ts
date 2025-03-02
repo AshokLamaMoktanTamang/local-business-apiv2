@@ -19,3 +19,8 @@ export const ERROR_MESSAGE = {
   FORBIDDEN: "Permission not allowed for this user!",
   SERVER_ERROR: "Internal server error!",
 };
+
+export enum INTERACTION_TYPE {
+  VISIT = "VISIT",
+  COMMENT = "COMMENT",
+}
